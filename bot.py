@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 db = TinyDB("db.json")
 Job = Query()
 
+TELEGRAM_BOT_TOKEN = ""
+
+
 class JobExistsException(Exception):
     pass
 
@@ -103,20 +106,29 @@ def look_for_stuff(context):
                 something_new = True
 
         if something_new:
-            db.update({"known_ads": list(known_ads)}, Job.search_term == job["search_term"])
+            db.update(
+                {"known_ads": list(known_ads)}, Job.search_term == job["search_term"]
+            )
         else:
             # context.bot.send_message(chat_id=job["chat_id"], text=f"Nothing new for {job['search_term']}")
             pass
 
 
+def status(update, context):
 
-updater = Updater(token='', use_context=True)
+    message = "I'm currently watching: \n"
+    for job in db.all():
+        message += "- " + job["search_term"] + "\n"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+
+updater = Updater(token=TELEGRAM_BOT_TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 job_queue = updater.job_queue
 
 job_minute = job_queue.run_repeating(look_for_stuff, interval=5 * 60, first=0)
 
-start_handler = CommandHandler('start', start)
+start_handler = CommandHandler("start", start)
 dispatcher.add_handler(start_handler)
 
 echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
@@ -124,6 +136,9 @@ dispatcher.add_handler(echo_handler)
 
 start_watching_handler = CommandHandler("start_watching", start_watching)
 dispatcher.add_handler(start_watching_handler)
+
+status_handler = CommandHandler("status", status)
+dispatcher.add_handler(status_handler)
 
 updater.start_polling()
 
