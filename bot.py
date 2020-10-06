@@ -2,12 +2,12 @@ from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 import requests
 from tinydb import TinyDB, Query
 from bs4 import BeautifulSoup
-
+import sys
 
 db = TinyDB("db.json")
 Job = Query()
 
-TELEGRAM_BOT_TOKEN = ""
+TELEGRAM_BOT_TOKEN = sys.argv[1]
 
 
 class JobExistsException(Exception):
