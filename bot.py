@@ -7,7 +7,7 @@ import sys
 db = TinyDB("db.json")
 Job = Query()
 
-TELEGRAM_BOT_TOKEN = sys.argv[1]
+TELEGRAM_BOT_TOKEN = None
 
 
 class JobExistsException(Exception):
@@ -17,14 +17,19 @@ class JobExistsException(Exception):
 def parse_result_item(item):
 
     main = item.find_all("div", {"aditem-main"})
+    details = item.find_all("div", {"aditem-details"})
     article = item.find_all("article")
 
-    if len(main) != 1 or len(article) != 1:
+    if len(main) != 1 or len(article) != 1 or len(details) != 1:
         return
     main = main[0]
     article = article[0]
+    details = details[0]
 
-    result = {"ad_id": article["data-adid"]}
+    result = {
+        "ad_id": article["data-adid"],
+        "price": details.find_all("strong")[0].text,
+    }
 
     a = main.find_all("a")[0]
     result["url"] = "https://www.ebay-kleinanzeigen.de" + a["href"]
@@ -100,7 +105,9 @@ def look_for_stuff(context):
         something_new = False
         for r in results:
             if r["ad_id"] not in known_ads:
-                message = f"Found something new for {job['search_term']}: {r['url']}"
+                message = (
+                    f"New item for {job['search_term']} ({r['price']}): {r['url']}"
+                )
                 context.bot.send_message(chat_id=job["chat_id"], text=message)
                 known_ads.add(r["ad_id"])
                 something_new = True
@@ -115,6 +122,8 @@ def look_for_stuff(context):
 
 
 def status(update, context):
+    global TELEGRAM_BOT_TOKEN
+    TELEGRAM_BOT_TOKEN = sys.argv[1]
 
     message = "I'm currently watching: \n"
     for job in db.all():
@@ -122,24 +131,23 @@ def status(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
 
-updater = Updater(token=TELEGRAM_BOT_TOKEN, use_context=True)
-dispatcher = updater.dispatcher
-job_queue = updater.job_queue
+if __name__ == "__main__":
+    updater = Updater(token=TELEGRAM_BOT_TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
+    job_queue = updater.job_queue
 
-job_minute = job_queue.run_repeating(look_for_stuff, interval=5 * 60, first=0)
+    job_minute = job_queue.run_repeating(look_for_stuff, interval=5 * 60, first=0)
 
-start_handler = CommandHandler("start", start)
-dispatcher.add_handler(start_handler)
+    start_handler = CommandHandler("start", start)
+    dispatcher.add_handler(start_handler)
 
-echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
-dispatcher.add_handler(echo_handler)
+    echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
+    dispatcher.add_handler(echo_handler)
 
-start_watching_handler = CommandHandler("start_watching", start_watching)
-dispatcher.add_handler(start_watching_handler)
+    start_watching_handler = CommandHandler("start_watching", start_watching)
+    dispatcher.add_handler(start_watching_handler)
 
-status_handler = CommandHandler("status", status)
-dispatcher.add_handler(status_handler)
+    status_handler = CommandHandler("status", status)
+    dispatcher.add_handler(status_handler)
 
-updater.start_polling()
-
-# execute_search("teppich")
+    updater.start_polling()
