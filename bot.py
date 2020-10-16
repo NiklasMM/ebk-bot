@@ -122,9 +122,6 @@ def look_for_stuff(context):
 
 
 def status(update, context):
-    global TELEGRAM_BOT_TOKEN
-    TELEGRAM_BOT_TOKEN = sys.argv[1]
-
     message = "I'm currently watching: \n"
     for job in db.all():
         message += "- " + job["search_term"] + "\n"
@@ -132,6 +129,8 @@ def status(update, context):
 
 
 if __name__ == "__main__":
+    TELEGRAM_BOT_TOKEN = sys.argv[1]
+
     updater = Updater(token=TELEGRAM_BOT_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
     job_queue = updater.job_queue
