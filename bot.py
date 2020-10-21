@@ -81,9 +81,7 @@ def start(update, context):
 
 
 def echo(update, context):
-    context.bot.send_message(
-        chat_id=update.effective_chat.id, text=update.message.text + ", fool"
-    )
+    context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
 
 
 def start_watching(update, context):
@@ -94,6 +92,18 @@ def start_watching(update, context):
         reply = "Hm, looks like I'm watching that already."
     else:
         reply = f"Ok, I'll start watching '{search_target}'"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=reply)
+
+
+def stop_watching(update, context):
+    search_term = "".join(context.args)
+    result = db.search(Job.search_term == search_term)
+
+    if not result:
+        reply = "I don't think I am watching that."
+    else:
+        db.remove(Job.search_term == search_term)
+        reply = "Ok. I'll no longer watch " + search_term
     context.bot.send_message(chat_id=update.effective_chat.id, text=reply)
 
 
@@ -145,6 +155,9 @@ if __name__ == "__main__":
 
     start_watching_handler = CommandHandler("start_watching", start_watching)
     dispatcher.add_handler(start_watching_handler)
+
+    stop_handler = CommandHandler("stop_watching", stop_watching)
+    dispatcher.add_handler(stop_handler)
 
     status_handler = CommandHandler("status", status)
     dispatcher.add_handler(status_handler)
