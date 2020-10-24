@@ -3,8 +3,9 @@ import requests
 from tinydb import TinyDB, Query
 from bs4 import BeautifulSoup
 import sys
+import os
 
-db = TinyDB("db.json")
+db = TinyDB("db/db.json")
 Job = Query()
 
 TELEGRAM_BOT_TOKEN = None
@@ -139,7 +140,9 @@ def status(update, context):
 
 
 if __name__ == "__main__":
-    TELEGRAM_BOT_TOKEN = sys.argv[1]
+    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", None)
+    if TELEGRAM_BOT_TOKEN is None:
+        TELEGRAM_BOT_TOKEN = sys.argv[1]
 
     updater = Updater(token=TELEGRAM_BOT_TOKEN, use_context=True)
     dispatcher = updater.dispatcher

@@ -1,0 +1,9 @@
+version: '3.7'
+services:
+  ebk-bot:
+    build: .
+    volumes:
+      - ./volumes/ebk-bot/db:/ebk-bot/db
+    env_file: .env
+
+
