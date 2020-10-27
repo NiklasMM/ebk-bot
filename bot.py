@@ -15,7 +15,10 @@ class JobExistsException(Exception):
 
 
 def parse_result_item(item):
-
+    """
+        Takes a li item containing one search result and parses id, url and price from it.
+        Returns a dict containing the results.
+    """
     main = item.find_all("div", {"aditem-main"})
     details = item.find_all("div", {"aditem-details"})
     article = item.find_all("article")
@@ -38,6 +41,10 @@ def parse_result_item(item):
 
 
 def execute_search(search_term):
+    """
+        Runs the search for one search term.
+        Returns a list containing all parsed search results.
+    """
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
     }
@@ -64,6 +71,10 @@ def execute_search(search_term):
 
 
 def init_search(search_term, chat_id):
+    """
+        Initialize a new search term.
+        Executes one search and marks all current results as known.
+    """
     result = db.search(Job.search_term == search_term)
 
     if result:
@@ -85,6 +96,9 @@ def echo(update, context):
 
 
 def start_watching(update, context):
+    """
+        Command handler for starting to watch a new search term.
+    """
     search_target = "".join(context.args)
     try:
         init_search(search_target, update.effective_chat.id)
@@ -96,6 +110,9 @@ def start_watching(update, context):
 
 
 def stop_watching(update, context):
+    """
+        Command handler for stopping to watch a search term
+    """
     search_term = "".join(context.args)
     result = db.search(Job.search_term == search_term)
 
@@ -108,7 +125,9 @@ def stop_watching(update, context):
 
 
 def look_for_stuff(context):
-
+    """
+        Command handler to peridically check all active search jobs.
+    """
     for job in db.all():
         known_ads = set(job["known_ads"])
         results = execute_search(job["search_term"])
