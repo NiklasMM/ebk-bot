@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+python-telegram-bot = "*"
+requests = "*"
+beautifulsoup4 = "*"
+tinydb = "*"
+click = "*"
+
+[dev-packages]
+black = "==21.8b0"
+isort = "*"
+
+[requires]
+python_version = "3.8"
